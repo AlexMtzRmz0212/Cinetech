@@ -66,6 +66,15 @@ export interface ImportEntry {
   source: string;
 }
 
+/** What visitors get to see: no Notion page id, source or sync bookkeeping. */
+export type PublicMovie = Omit<Movie, "pageId" | "source" | "lastSynced">;
+
+export function toPublic(movie: Movie): PublicMovie {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { pageId, source, lastSynced, ...rest } = movie;
+  return rest;
+}
+
 /** Your rating on a 0.5-5 scale, whichever source it came from. */
 export const userRating = (m: Pick<Movie, "letterboxdRating" | "myRating">) => m.letterboxdRating ?? m.myRating ?? null;
 

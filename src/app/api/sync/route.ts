@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { fail } from "@/lib/api";
 import { mapLimit } from "@/lib/http";
@@ -33,6 +34,8 @@ export async function POST(request: Request) {
       }
     });
 
+    revalidatePath("/");
+    revalidatePath("/stats");
     return NextResponse.json({ results, nextCursor: page.nextCursor });
   } catch (error) {
     return fail(error);

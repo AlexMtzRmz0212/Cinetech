@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { OwnerNav } from "@/components/OwnerNav";
 import "./globals.css";
 
 export const metadata: Metadata = { title: "Cinetech", description: "Your movie library, synced with Notion" };
 
 const links = [
   { href: "/", label: "Library" },
-  { href: "/add", label: "Add" },
-  { href: "/sync", label: "Sync" },
   { href: "/stats", label: "Stats" },
 ];
 
@@ -23,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 {l.label}
               </Link>
             ))}
+            <OwnerNav />
           </nav>
         </header>
         <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>

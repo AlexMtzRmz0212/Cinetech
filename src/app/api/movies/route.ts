@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { fail } from "@/lib/api";
 import { createMovie, listAllMovies } from "@/lib/notion/movies";
@@ -38,7 +39,10 @@ export async function POST(request: Request) {
     movie.status = body.status ?? "Watchlist";
     movie.source = "Manual";
     movie.lastSynced = new Date().toISOString().slice(0, 10);
-    return NextResponse.json({ movie: await createMovie(movie) }, { status: 201 });
+    const created = await createMovie(movie);
+    revalidatePath("/");
+    revalidatePath("/stats");
+    return NextResponse.json({ movie: created }, { status: 201 });
   } catch (error) {
     return fail(error);
   }

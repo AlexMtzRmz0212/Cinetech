@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE, gateEnabled, verifySession } from "./lib/auth";
+import { COOKIE, gateEnabled, isPublicPath, verifySession } from "./lib/auth";
 
 export async function proxy(request: NextRequest) {
   if (!gateEnabled()) return NextResponse.next();
 
   const { pathname } = request.nextUrl;
-  if (pathname === "/login" || pathname === "/api/login") return NextResponse.next();
+  if (isPublicPath(pathname)) return NextResponse.next();
 
   if (await verifySession(request.cookies.get(COOKIE)?.value)) return NextResponse.next();
 

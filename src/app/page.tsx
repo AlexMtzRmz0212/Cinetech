@@ -1,14 +1,15 @@
 import { LibraryView } from "@/components/LibraryView";
 import { SetupError } from "@/components/SetupError";
 import { listAllMovies } from "@/lib/notion/movies";
-import type { Movie } from "@/lib/types";
+import { toPublic, type PublicMovie } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+// Public showcase: re-read Notion at most every 15 min (owner actions refresh it right away).
+export const revalidate = 900;
 
 export default async function Home() {
-  let movies: Movie[];
+  let movies: PublicMovie[];
   try {
-    movies = await listAllMovies({ fresh: true });
+    movies = (await listAllMovies()).map(toPublic);
   } catch (error) {
     return <SetupError error={error} />;
   }

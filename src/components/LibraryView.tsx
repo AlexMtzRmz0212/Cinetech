@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { userRating, type Movie } from "@/lib/types";
+import { userRating, type PublicMovie as Movie } from "@/lib/types";
 
 type Sort = "title" | "year" | "watched" | "rating";
 
@@ -76,8 +76,8 @@ export function LibraryView({ movies }: { movies: Movie[] }) {
       {movies.length === 0 && <p className="text-muted">Your library is empty. Add a movie or run a sync.</p>}
 
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
-        {shown.map((m) => (
-          <li key={m.pageId ?? m.title} className="group overflow-hidden rounded-lg border border-border bg-panel">
+        {shown.map((m, i) => (
+          <li key={`${m.tmdbId ?? m.title}-${i}`} className="group overflow-hidden rounded-lg border border-border bg-panel">
             <div className="relative aspect-[2/3] bg-border">
               {m.poster ? (
                 // eslint-disable-next-line @next/next/no-img-element

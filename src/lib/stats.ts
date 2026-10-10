@@ -1,4 +1,4 @@
-import { userRating, type Movie } from "./types";
+import { userRating, type PublicMovie as Movie } from "./types";
 
 export interface Count {
   label: string;

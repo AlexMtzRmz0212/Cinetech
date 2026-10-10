@@ -2,7 +2,7 @@ import { SetupError } from "@/components/SetupError";
 import { listAllMovies } from "@/lib/notion/movies";
 import { computeStats, type Count } from "@/lib/stats";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 900;
 
 function Bars({ title, data, unit }: { title: string; data: Count[]; unit?: string }) {
   const max = Math.max(1, ...data.map((d) => d.count));
@@ -35,7 +35,7 @@ const Tile = ({ label, value }: { label: string; value: string | number }) => (
 export default async function Stats() {
   let s;
   try {
-    s = computeStats(await listAllMovies({ fresh: true }));
+    s = computeStats(await listAllMovies());
   } catch (error) {
     return <SetupError error={error} />;
   }

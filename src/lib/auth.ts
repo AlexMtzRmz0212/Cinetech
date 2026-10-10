@@ -19,6 +19,10 @@ function equal(a: string, b: string) {
   return diff === 0;
 }
 
+/** Pages and endpoints open to visitors: the read-only showcase. Everything else is owner-only. */
+const PUBLIC_PATHS = ["/", "/stats", "/login", "/api/login", "/api/logout", "/api/me"];
+export const isPublicPath = (pathname: string) => PUBLIC_PATHS.includes(pathname);
+
 /** With no APP_PASSWORD the gate is open in development and closed in production. */
 export const gateEnabled = () => Boolean(process.env.APP_PASSWORD) || process.env.NODE_ENV === "production";
 
