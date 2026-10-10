@@ -13,3 +13,6 @@ next-env.d.ts
 NotionIMDb.py
 NotionTMDb In Process/
 LetterboxdNotion/
+
+.vercel
+.env*

@@ -1,4 +1,4 @@
-# Movie Hub
+# Cinetech
 
 A personal movie library that uses **Notion as its database** and keeps it enriched and in sync with TMDb, OMDb and Letterboxd.
 It replaces the old `NotionIMDb.py`, `NotionTMDb` and `LetterboxdNotion` scripts.

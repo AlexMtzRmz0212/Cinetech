@@ -43,7 +43,7 @@ export function parseRss(xml: string): ImportEntry[] {
 
 export async function fetchRss(username: string): Promise<ImportEntry[]> {
   const res = await fetchRetry(`https://letterboxd.com/${encodeURIComponent(username)}/rss/`, {
-    headers: { "user-agent": "movie-hub/0.1 (personal sync)" },
+    headers: { "user-agent": "cinetech/0.1 (personal sync)" },
   });
   if (res.status === 404) throw new Error(`Letterboxd user "${username}" not found (profile must be public)`);
   if (!res.ok) throw new Error(`Letterboxd RSS failed: ${res.status}`);
