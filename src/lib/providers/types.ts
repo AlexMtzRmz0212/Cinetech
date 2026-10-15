@@ -18,5 +18,5 @@ export interface MovieProvider {
 }
 
 export type ImportInput =
-  | { kind: "file"; name: string; data: ArrayBuffer }
+  | { kind: "file"; name: string; data: ArrayBuffer; /** What the user said the file is, when the provider has several kinds (IMDb: ratings or watchlist). */ hint?: string }
   | { kind: "account"; username?: string };

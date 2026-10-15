@@ -17,11 +17,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
 
     const entries: ImportEntry[] = [];
     if (request.headers.get("content-type")?.includes("multipart/form-data")) {
-      const files = (await request.formData()).getAll("file").filter((f): f is File => f instanceof File);
+      const form = await request.formData();
+      const hint = typeof form.get("kind") === "string" ? (form.get("kind") as string) : undefined;
+      const files = form.getAll("file").filter((f): f is File => f instanceof File);
       if (files.length === 0) return NextResponse.json({ error: "Attach at least one file" }, { status: 400 });
       for (const file of files) {
         try {
-          entries.push(...(await provider.import({ kind: "file", name: file.name, data: await file.arrayBuffer() })));
+          entries.push(...(await provider.import({ kind: "file", name: file.name, data: await file.arrayBuffer(), hint })));
         } catch (error) {
           throw new Error(`${file.name}: ${error instanceof Error ? error.message : error}`);
         }

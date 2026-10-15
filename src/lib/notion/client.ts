@@ -13,6 +13,8 @@ interface Resolved {
   dataSourceId: string;
   titleProp: string;
   props: Record<string, string>; // existing property name -> type
+  /** Option names of the Status column, in Notion's order. */
+  statusOptions: string[];
 }
 
 let resolved: Promise<Resolved> | undefined;
@@ -20,7 +22,8 @@ let resolved: Promise<Resolved> | undefined;
 /**
  * Notion's current API queries "data sources" rather than databases. Resolve the
  * configured database to its (first) data source, discover the title column, and
- * create any of our columns that are missing. Cached for the process lifetime.
+ * create any of our columns that are missing. Cached for the process lifetime
+ * (call `refreshSchema` to pick up Status options added in Notion since).
  */
 export function getSchema(): Promise<Resolved> {
   resolved ??= resolve().catch((error) => {
@@ -28,6 +31,11 @@ export function getSchema(): Promise<Resolved> {
     throw error;
   });
   return resolved;
+}
+
+export function refreshSchema(): Promise<Resolved> {
+  resolved = undefined;
+  return getSchema();
 }
 
 async function resolve(): Promise<Resolved> {
@@ -44,6 +52,8 @@ async function resolve(): Promise<Resolved> {
     if (def.type === "title") titleProp = name;
   }
   if (!titleProp) throw new Error("The Notion database has no title column");
+  const statusDef = ds.properties[FIELDS.status.name];
+  const statusOptions: string[] = (statusDef?.status?.options ?? statusDef?.select?.options ?? []).map((o: NotionAny) => o.name);
 
   const missing: Record<string, NotionAny> = {};
   for (const key of FIELD_KEYS) {
@@ -58,5 +68,5 @@ async function resolve(): Promise<Resolved> {
     for (const [name, def] of Object.entries(missing)) props[name] = Object.keys(def)[0];
   }
 
-  return { dataSourceId, titleProp, props };
+  return { dataSourceId, titleProp, props, statusOptions };
 }

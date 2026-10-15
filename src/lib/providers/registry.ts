@@ -2,11 +2,19 @@ import { imdbProvider } from "./imdb";
 import { letterboxdProvider } from "./letterboxd";
 import { omdbProvider } from "./omdb";
 import { tmdbProvider } from "./tmdb";
+import { tmdbAccountProvider } from "./tmdbAccount";
 import { traktProvider } from "./trakt";
 import type { MovieProvider } from "./types";
 
 /** Adding a source = write a MovieProvider, add it here. */
-export const providers: MovieProvider[] = [tmdbProvider, omdbProvider, letterboxdProvider, imdbProvider, traktProvider];
+export const providers: MovieProvider[] = [
+  tmdbProvider,
+  omdbProvider,
+  letterboxdProvider,
+  imdbProvider,
+  traktProvider,
+  tmdbAccountProvider,
+];
 
 export const getProvider = (id: string) => providers.find((p) => p.id === id);
 

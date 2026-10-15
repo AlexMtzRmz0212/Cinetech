@@ -12,18 +12,23 @@ const num = (v?: string) => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 
+export type ImdbKind = "ratings" | "watchlist";
+
 /**
- * Parse an IMDb CSV export. Two shapes exist:
- *  - ratings.csv  (has "Your Rating", "Date Rated")  -> Watched, rating 1-10 mapped to 0.5-5
- *  - watchlist / list export (no "Your Rating")      -> Watchlist
+ * Parse an IMDb CSV export. Two kinds exist:
+ *  - ratings.csv     -> Watched, rating 1-10 mapped to 0.5-5, watched date = date rated
+ *  - watchlist/list  -> Watchlist (list exports can carry "Your Rating" columns too, so they are told apart by Position/Created)
+ * `kind` is what the user said the file is; without it the kind is guessed from the columns.
  */
-export function parseImdbCsv(text: string): ImportEntry[] {
+export function parseImdbCsv(text: string, kind?: ImdbKind): ImportEntry[] {
   const { data, meta } = Papa.parse<Row>(text.replace(/^﻿/, ""), { header: true, skipEmptyLines: true });
   const cols = meta.fields ?? [];
   if (!cols.includes("Const") || !cols.includes("Title")) {
     throw new Error("This doesn't look like an IMDb export (expected Const and Title columns)");
   }
-  const rated = cols.includes("Your Rating");
+  const isList = cols.includes("Position") || cols.includes("Created");
+  const rated = (kind ? kind === "ratings" : !isList) && cols.includes("Your Rating");
+  if (kind === "ratings" && !rated) throw new Error("This is not a ratings export (no Your Rating column). Use the Watchlist upload for lists.");
   return data
     .filter((row) => row.Const && row.Title && isMovie(row["Title Type"]))
     .map((row) => {
@@ -46,6 +51,7 @@ export const imdbProvider: MovieProvider = {
   configured: () => true, // file upload only
   async import(input: ImportInput) {
     if (input.kind !== "file") throw new Error("IMDb has no account sync: upload ratings.csv or a watchlist export");
-    return parseImdbCsv(new TextDecoder("utf-8").decode(input.data));
+    const kind = input.hint === "ratings" || input.hint === "watchlist" ? input.hint : undefined;
+    return parseImdbCsv(new TextDecoder("utf-8").decode(input.data), kind);
   },
 };

@@ -8,8 +8,12 @@ export interface Movie {
   imdbId?: string | null;
   imdbRating?: number | null;
   tmdbRating?: number | null;
+  /** Your rating on each tracker (0.5-5). Imports keep these in step with the tracker. */
   letterboxdRating?: number | null;
-  /** Your rating (0.5-5) from sources other than Letterboxd (IMDb, Trakt...). */
+  imdbMyRating?: number | null;
+  traktRating?: number | null;
+  tmdbMyRating?: number | null;
+  /** Your master rating (0.5-5): what the site shows. Imports only fill it when empty; edit it in the app. */
   myRating?: number | null;
   directors: string[];
   genres: string[];
@@ -20,6 +24,8 @@ export interface Movie {
   overview?: string | null;
   poster?: string | null;
   status?: Status | null;
+  /** The raw Notion Status option ("I recommend", "Want to Watch"...); `status` is its Watched/Watchlist category. */
+  statusName?: string | null;
   watchedDate?: string | null;
   source?: string | null;
   lastSynced?: string | null;
@@ -49,6 +55,7 @@ export type MovieMetadata = Partial<
 export interface SearchResult {
   tmdbId: number;
   title: string;
+  originalTitle?: string;
   year: number | null;
   poster: string | null;
   overview: string;
@@ -75,8 +82,11 @@ export function toPublic(movie: Movie): PublicMovie {
   return rest;
 }
 
-/** Your rating on a 0.5-5 scale, whichever source it came from. */
-export const userRating = (m: Pick<Movie, "letterboxdRating" | "myRating">) => m.letterboxdRating ?? m.myRating ?? null;
+export type RatingKey = "myRating" | "letterboxdRating" | "imdbMyRating" | "traktRating" | "tmdbMyRating";
+
+/** Your rating on a 0.5-5 scale: the master rating, else the first tracker that has one. */
+export const userRating = (m: Partial<Pick<Movie, RatingKey>>) =>
+  m.myRating ?? m.letterboxdRating ?? m.imdbMyRating ?? m.traktRating ?? m.tmdbMyRating ?? null;
 
 export const emptyMovie = (title: string): Movie => ({
   title,

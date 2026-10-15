@@ -42,8 +42,7 @@ export default async function Stats() {
   return (
     <>
       <h1 className="mb-4 text-xl font-semibold">Stats</h1>
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Tile label="Movies" value={s.total} />
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Tile label="Watched" value={s.watched} />
         <Tile label="Watchlist" value={s.watchlist} />
         <Tile label="Avg rating (of 5)" value={s.averageRating ?? "-"} />

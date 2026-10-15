@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import Papa from "papaparse";
 import { fetchRetry } from "../http";
 import { optional } from "../env";
+import { normTitle } from "../sync/match";
 import type { ImportEntry } from "../types";
 import type { ImportInput, MovieProvider } from "./types";
 
@@ -61,7 +62,8 @@ export function entriesFromCsvs(files: Partial<Record<"diary" | "ratings" | "wat
   const byKey = new Map<string, ImportEntry>();
   const get = (row: Row, status: ImportEntry["status"]) => {
     const year = toNumber(row.Year);
-    const key = row["Letterboxd URI"] || `${row.Name}|${year}`;
+    // Not the "Letterboxd URI": in diary.csv it points to the diary entry, not the film.
+    const key = `${normTitle(row.Name ?? "")}|${year}`;
     let entry = byKey.get(key);
     if (!entry) {
       entry = { title: row.Name, year, status, source: SOURCE };

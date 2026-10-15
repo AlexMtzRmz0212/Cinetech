@@ -48,7 +48,17 @@ describe("notion status property", () => {
     expect(movieToProperties({ status: "Watched" }, "Movie", { Status: "select" }).Status).toEqual({ select: { name: "Watched" } });
   });
 
-  it("uses the Director(s) column", () => {
-    expect(movieToProperties({ directors: ["Michael Mann"] }, "Movie")["Director(s)"]).toEqual({ multi_select: [{ name: "Michael Mann" }] });
+  it("writes Director(s) and Cast as text, or as options while the column is still a multi-select", () => {
+    expect(movieToProperties({ directors: ["Michael Mann", "Ridley Scott"] }, "Movie")["Director(s)"]).toEqual({
+      rich_text: [{ text: { content: "Michael Mann, Ridley Scott" } }],
+    });
+    expect(movieToProperties({ cast: ["Al Pacino"] }, "Movie", { Cast: "multi_select" }).Cast).toEqual({ multi_select: [{ name: "Al Pacino" }] });
+  });
+
+  it("reads Director(s) from text or from options", () => {
+    const page = (prop: object) => ({ id: "p", properties: { Movie: { title: [{ plain_text: "Heat" }] }, "Director(s)": prop } });
+    const text = { rich_text: [{ plain_text: "Michael Mann, Ridley Scott" }] };
+    expect(pageToMovie(page(text), "Movie").directors).toEqual(["Michael Mann", "Ridley Scott"]);
+    expect(pageToMovie(page({ multi_select: [{ name: "Michael Mann" }] }), "Movie").directors).toEqual(["Michael Mann"]);
   });
 });

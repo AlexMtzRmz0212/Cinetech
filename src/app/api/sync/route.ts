@@ -10,6 +10,7 @@ export const maxDuration = 60;
 interface Body {
   cursor?: string | null;
   mode?: EnrichMode;
+  provider?: "tmdb" | "omdb";
   batchSize?: number;
 }
 
@@ -19,13 +20,15 @@ interface Body {
  */
 export async function POST(request: Request) {
   try {
-    const { cursor = null, mode = "missing", batchSize = 8 } = (await request.json().catch(() => ({}))) as Body;
+    const { cursor = null, mode = "missing", provider, batchSize = 8 } = (await request.json().catch(() => ({}))) as Body;
     const page = await listMoviesPage(cursor, Math.min(Math.max(batchSize, 1), 25));
 
     const results = await mapLimit(page.movies, 3, async (movie) => {
-      if (mode === "missing" && isComplete(movie)) return { title: movie.title, status: "skipped" as const };
+      // OMDb only supplies the IMDb rating and needs the IMDb id (which TMDb fills in).
+      const complete = provider === "omdb" ? Boolean(movie.imdbRating) || !movie.imdbId : isComplete(movie);
+      if (mode === "missing" && complete) return { title: movie.title, status: "skipped" as const };
       try {
-        const { found, patch, changed } = await enrichMovie(movie, mode);
+        const { found, patch, changed } = await enrichMovie(movie, mode, provider);
         if (!found) return { title: movie.title, status: "not-found" as const };
         if (movie.pageId) await updateMovie(movie.pageId, patch);
         return { title: movie.title, status: changed.length ? ("updated" as const) : ("unchanged" as const), changed };

@@ -26,7 +26,8 @@ describe("letterboxd export CSVs", () => {
     ratings: head("Date,Name,Year,Letterboxd URI,Rating") + "2024-02-01,Heat,1995,https://boxd.it/a,4.5\n",
     diary:
       head("Date,Name,Year,Letterboxd URI,Rating,Rewatch,Tags,Watched Date") +
-      "2024-02-01,Heat,1995,https://boxd.it/a,4.5,,,2023-12-24\n2024-03-01,Heat,1995,https://boxd.it/a,4.5,Yes,,2024-02-28\n",
+      // Diary URIs point to the diary entry, not the film, so they differ from the other files.
+      "2024-02-01,Heat,1995,https://boxd.it/d1,4.5,,,2023-12-24\n2024-03-01,Heat,1995,https://boxd.it/d2,4.5,Yes,,2024-02-28\n",
   });
 
   it("merges files into one entry per film", () => {

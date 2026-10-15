@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { fail } from "@/lib/api";
+import { refreshSchema } from "@/lib/notion/client";
 import { createMovie, listAllMovies } from "@/lib/notion/movies";
 import { getTmdbMetadata } from "@/lib/providers/tmdb";
 import { omdbProvider } from "@/lib/providers/omdb";
@@ -9,9 +10,11 @@ import { emptyMovie, type Status } from "@/lib/types";
 
 export const maxDuration = 60;
 
+/** Owner only: the full library (with page ids) plus the Status options, for editing. */
 export async function GET() {
   try {
-    return NextResponse.json({ movies: await listAllMovies() });
+    const [{ statusOptions }, movies] = await Promise.all([refreshSchema(), listAllMovies({ fresh: true })]);
+    return NextResponse.json({ movies, statusOptions });
   } catch (error) {
     return fail(error);
   }

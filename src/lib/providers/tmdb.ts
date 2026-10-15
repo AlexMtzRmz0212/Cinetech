@@ -1,5 +1,6 @@
 import { fetchRetry } from "../http";
 import { optional, required } from "../env";
+import { normTitle } from "../sync/match";
 import type { Movie, MovieMetadata, SearchResult } from "../types";
 import type { MovieProvider } from "./types";
 
@@ -26,7 +27,7 @@ async function get<T>(path: string, params?: Record<string, string>): Promise<T 
 }
 
 interface TmdbSearch {
-  results: { id: number; title: string; release_date?: string; poster_path?: string | null; overview?: string }[];
+  results: { id: number; title: string; original_title?: string; release_date?: string; poster_path?: string | null; overview?: string }[];
 }
 
 interface TmdbDetails {
@@ -58,6 +59,7 @@ export async function searchTmdb(query: string, year?: number | null): Promise<S
   return (data?.results ?? []).map((r) => ({
     tmdbId: r.id,
     title: r.title,
+    originalTitle: r.original_title,
     year: yearOf(r.release_date),
     poster: r.poster_path ? IMG + r.poster_path : null,
     overview: r.overview ?? "",
@@ -117,6 +119,35 @@ function pickBest(results: SearchResult[], movie: Pick<Movie, "title" | "year">)
     if (near) return near;
   }
   return pool[0];
+}
+
+/**
+ * The one result that is surely this film: same title (or original title) and a year at most one off.
+ * Undefined when nothing, or more than one film, fits.
+ */
+export function pickConfident(results: SearchResult[], movie: Pick<Movie, "title" | "year">): SearchResult | undefined {
+  if (!movie.year) return undefined;
+  const title = normTitle(movie.title);
+  const fits = results.filter(
+    (r) =>
+      (normTitle(r.title) === title || (r.originalTitle && normTitle(r.originalTitle) === title)) &&
+      r.year !== null &&
+      Math.abs(r.year - movie.year!) <= 1,
+  );
+  if (fits.length <= 1) return fits[0];
+  const sameYear = fits.filter((r) => r.year === movie.year);
+  return sameYear.length === 1 ? sameYear[0] : undefined;
+}
+
+/** Like `resolveTmdbId`, but never guesses: imports use it so two different films can't be merged. */
+export async function resolveTmdbIdStrict(movie: Pick<Movie, "title" | "year" | "tmdbId" | "imdbId">): Promise<number | null> {
+  if (movie.tmdbId) return movie.tmdbId;
+  if (movie.imdbId) {
+    const id = await tmdbIdFromImdb(movie.imdbId);
+    if (id) return id;
+  }
+  const hit = pickConfident(await searchTmdb(movie.title, movie.year), movie) ?? (movie.year ? pickConfident(await searchTmdb(movie.title), movie) : undefined);
+  return hit?.tmdbId ?? null;
 }
 
 export const tmdbProvider: MovieProvider = {

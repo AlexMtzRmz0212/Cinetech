@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { SearchResult, Status } from "@/lib/types";
+import { LIBRARY_CHANGED } from "./OwnerNav";
 
 export function AddMovie() {
   const [query, setQuery] = useState("");
@@ -28,6 +29,7 @@ export function AddMovie() {
     const res = await fetch("/api/movies", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ tmdbId, status }) });
     const data = await res.json();
     setBusy(null);
+    if (res.ok) window.dispatchEvent(new Event(LIBRARY_CHANGED));
     setMessage(res.ok ? { ok: true, text: `Added "${data.movie.title}" to Notion as ${status}` } : { ok: false, text: data.error });
   }
 

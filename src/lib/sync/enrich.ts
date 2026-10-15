@@ -8,7 +8,7 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
 /** A movie with these filled in is considered done by the "missing" mode. */
 export const isComplete = (m: Movie) =>
-  !isEmpty(m.tmdbId) && !isEmpty(m.poster) && !isEmpty(m.overview) && !isEmpty(m.directors) && !isEmpty(m.genres);
+  !isEmpty(m.tmdbId) && !isEmpty(m.poster) && !isEmpty(m.overview) && !isEmpty(m.directors) && !isEmpty(m.genres) && !isEmpty(m.cast);
 
 export interface EnrichResult {
   found: boolean;
@@ -20,13 +20,14 @@ export interface EnrichResult {
  * Query every configured enrichment provider and merge what they know into `patch`.
  *  - "missing": only fills empty fields, never touches what is already in Notion.
  *  - "full": provider data overwrites existing values.
+ * `only` limits the run to one provider id (e.g. "tmdb" or "omdb").
  * User-owned fields (status, watched date, Letterboxd rating, source) are never in provider output.
  */
-export async function enrichMovie(movie: Movie, mode: EnrichMode): Promise<EnrichResult> {
+export async function enrichMovie(movie: Movie, mode: EnrichMode, only?: string): Promise<EnrichResult> {
   let working: Movie = { ...movie };
   const gathered: MovieMetadata = {};
 
-  for (const provider of enrichers()) {
+  for (const provider of enrichers().filter((p) => !only || p.id === only)) {
     const meta = await provider.enrich!(working);
     if (!meta) continue;
     for (const [key, value] of Object.entries(meta)) {

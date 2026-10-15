@@ -33,7 +33,7 @@ describe("patchForEntry", () => {
     expect(patchForEntry(movie({ status: "Watched" }), { ...entry, status: "Watchlist" })).toEqual({});
   });
   it("is idempotent", () => {
-    const m = movie({ status: "Watched", watchedDate: "2024-05-01", letterboxdRating: 4, source: "Letterboxd" });
+    const m = movie({ status: "Watched", watchedDate: "2024-05-01", letterboxdRating: 4, myRating: 4, source: "Letterboxd" });
     expect(patchForEntry(m, entry)).toEqual({});
   });
 });

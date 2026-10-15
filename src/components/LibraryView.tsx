@@ -1,19 +1,42 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { userRating, type PublicMovie as Movie } from "@/lib/types";
+import { useEffect, useMemo, useState } from "react";
+import { userRating, type Movie as FullMovie, type PublicMovie } from "@/lib/types";
+import { EditMovie } from "./EditMovie";
+
+/** Visitors get public movies; the owner gets full ones (with a Notion page id) and can edit them. */
+type Movie = PublicMovie & { pageId?: string };
 
 type Sort = "title" | "year" | "watched" | "rating";
 
 const uniq = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
 
-export function LibraryView({ movies }: { movies: Movie[] }) {
+export function LibraryView({ movies: initial }: { movies: PublicMovie[] }) {
+  const [movies, setMovies] = useState<Movie[]>(initial);
+  const [statusOptions, setStatusOptions] = useState<string[] | null>(null); // non-null = owner mode
+  const [editing, setEditing] = useState<FullMovie | null>(null);
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState("");
   const [director, setDirector] = useState("");
   const [status, setStatus] = useState("");
   const [minRating, setMinRating] = useState(0);
   const [sort, setSort] = useState<Sort>("watched");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const me = await fetch("/api/me").then((r) => r.json()).catch(() => ({ owner: false }));
+      if (!me.owner) return;
+      const res = await fetch("/api/movies", { cache: "no-store" });
+      if (!res.ok || cancelled) return;
+      const data = (await res.json()) as { movies: FullMovie[]; statusOptions: string[] };
+      setMovies(data.movies);
+      setStatusOptions(data.statusOptions);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const genres = useMemo(() => uniq(movies.flatMap((m) => m.genres)), [movies]);
   const directors = useMemo(() => uniq(movies.flatMap((m) => m.directors)), [movies]);
@@ -73,27 +96,51 @@ export function LibraryView({ movies }: { movies: Movie[] }) {
         </p>
       </div>
 
+      {editing && statusOptions && (
+        <EditMovie
+          movie={editing}
+          statusOptions={statusOptions}
+          onClose={() => setEditing(null)}
+          onSaved={(m) => {
+            setMovies((list) => list.map((x) => (x.pageId === m.pageId ? m : x)));
+            setEditing(null);
+          }}
+          onTrashed={(pageId) => {
+            setMovies((list) => list.filter((x) => x.pageId !== pageId));
+            setEditing(null);
+          }}
+        />
+      )}
+
       {movies.length === 0 && <p className="text-muted">Your library is empty. Add a movie or run a sync.</p>}
 
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6">
         {shown.map((m, i) => (
-          <li key={`${m.tmdbId ?? m.title}-${i}`} className="group overflow-hidden rounded-lg border border-border bg-panel">
-            <div className="relative aspect-[2/3] bg-border">
-              {m.poster ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.poster} alt={m.title} loading="lazy" className="h-full w-full object-cover" />
-              ) : (
-                <span className="flex h-full items-center justify-center p-2 text-center text-sm text-muted">{m.title}</span>
-              )}
-              {m.status === "Watchlist" && <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px]">WATCHLIST</span>}
-              {userRating(m) && <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-xs text-accent">{userRating(m)}★</span>}
-            </div>
-            <div className="p-2">
-              <p className="truncate text-sm font-medium" title={m.title}>{m.title}</p>
-              <p className="truncate text-xs text-muted">
-                {[m.year, m.directors[0]].filter(Boolean).join(" · ") || "—"}
-              </p>
-            </div>
+          <li key={m.pageId ?? `${m.tmdbId ?? m.title}-${i}`} className="group overflow-hidden rounded-lg border border-border bg-panel">
+            <button
+              type="button"
+              className="block w-full text-left disabled:cursor-default"
+              disabled={!statusOptions || !m.pageId}
+              onClick={() => setEditing(m as FullMovie)}
+              aria-label={statusOptions ? `Edit ${m.title}` : undefined}
+            >
+              <div className="relative aspect-[2/3] bg-border">
+                {m.poster ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={m.poster} alt={m.title} loading="lazy" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full items-center justify-center p-2 text-center text-sm text-muted">{m.title}</span>
+                )}
+                {m.status === "Watchlist" && <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px]">WATCHLIST</span>}
+                {userRating(m) && <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-xs text-accent">{userRating(m)}★</span>}
+              </div>
+              <div className="p-2">
+                <p className="truncate text-sm font-medium" title={m.title}>{m.title}</p>
+                <p className="truncate text-xs text-muted">
+                  {[m.year, m.directors[0]].filter(Boolean).join(" · ") || "—"}
+                </p>
+              </div>
+            </button>
           </li>
         ))}
       </ul>

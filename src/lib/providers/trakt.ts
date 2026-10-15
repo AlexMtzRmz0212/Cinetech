@@ -21,10 +21,12 @@ async function list<T>(username: string, path: string): Promise<T[]> {
   const out: T[] = [];
   for (let page = 1, pages = 1; page <= pages; page++) {
     const res = await fetchRetry(`${API}/users/${encodeURIComponent(username)}/${path}?page=${page}&limit=1000`, {
-      headers: { "content-type": "application/json", "trakt-api-version": "2", "trakt-api-key": clientId },
+      // Trakt's Cloudflare front rejects requests without a User-Agent (403), which Node's fetch doesn't send.
+      headers: { "content-type": "application/json", "trakt-api-version": "2", "trakt-api-key": clientId, "user-agent": "Cinetech/1.0" },
     });
     if (res.status === 404) throw new Error(`Trakt user "${username}" not found`);
-    if (res.status === 401 || res.status === 403) throw new Error("Trakt profile is private: make it public");
+    if (res.status === 401) throw new Error("Trakt profile is private: make it public");
+    if (res.status === 403) throw new Error("Trakt rejected the request (403): check TRAKT_CLIENT_ID, or the profile is private");
     if (!res.ok) throw new Error(`Trakt ${path} failed: ${res.status}`);
     pages = Number(res.headers.get("x-pagination-page-count")) || 1;
     out.push(...((await res.json()) as T[]));
