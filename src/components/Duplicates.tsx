@@ -22,9 +22,9 @@ interface Group {
 }
 
 const describe = (r: Row) =>
-  [r.year, r.status, r.rating ? `${r.rating}★` : null, r.watchedDate, r.source, r.tmdbId ? `TMDb ${r.tmdbId}` : null, r.imdbId]
+  [r.year, r.status, r.rating ? `${r.rating}★` : null, r.source, r.tmdbId ? `TMDb ${r.tmdbId}` : null, r.imdbId]
     .filter(Boolean)
-    .join(" · ");
+    .join(", ");
 
 /** Finds rows that are the same film and merges them on request, one group at a time. */
 export function Duplicates({ disabled }: { disabled: boolean }) {
@@ -96,12 +96,12 @@ export function Duplicates({ disabled }: { disabled: boolean }) {
   }
 
   return (
-    <section className="rounded-lg border border-border bg-panel p-4">
-      <h2 className="mb-1 font-semibold">Duplicates</h2>
-      <p className="mb-3 text-sm text-muted">
+    <section className="p-4 sm:p-5">
+      <h3 className="mb-2 font-semibold">Duplicates</h3>
+      <p className="mb-3 max-w-[60ch] text-sm text-muted">
         Rows with the same TMDb id, IMDb id, or title and year. Merging keeps the most complete row and combines everything from the
-        others into it: any field only one row has, lists (genres, cast, tags) joined, notes appended, Watched wins and the latest
-        watched date wins. The rest go to the Notion trash, where they can be restored. Text written inside a page is not copied.
+        others into it: any field only one row has, lists (genres, cast, tags) joined, notes appended, and Watched wins. The rest go to
+        the Notion trash, where they can be restored. Text written inside a page is not copied.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <button className="btn" disabled={disabled || busy !== null} onClick={load}>
@@ -113,26 +113,33 @@ export function Duplicates({ disabled }: { disabled: boolean }) {
           </button>
         )}
       </div>
-      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-danger">
+          {error}
+        </p>
+      )}
       {groups && groups.length === 0 && <p className="mt-3 text-sm text-muted">No duplicates found.</p>}
       {groups && groups.length > 0 && (
-        <ul className="mt-3 space-y-3">
-          {groups.map((g) => (
-            <li key={g.keep.pageId} className="rounded-md border border-border p-3 text-sm">
-              <p>
-                <span className="font-medium">Keep:</span> {g.keep.title} <span className="text-muted">{describe(g.keep)}</span>
-              </p>
-              {g.trash.map((r) => (
-                <p key={r.pageId} className="text-muted">
-                  <span className="font-medium text-text">Trash:</span> {r.title} · {describe(r)}
+        <ul className="mt-4 space-y-3">
+          {groups.map((g) => {
+            const fills = g.fills.filter((f) => f !== "watchedDate");
+            return (
+              <li key={g.keep.pageId} className="rounded-md border border-border bg-well p-3 text-sm">
+                <p>
+                  <span className="font-medium text-ok">Keep</span> {g.keep.title} <span className="text-muted">{describe(g.keep)}</span>
                 </p>
-              ))}
-              {g.fills.length > 0 && <p className="mt-1 text-xs text-muted">Fills in: {g.fills.join(", ")}</p>}
-              <button className="btn mt-2" disabled={disabled || busy !== null} onClick={() => merge(g)}>
-                {busy === g.keep.pageId ? "Merging…" : "Merge"}
-              </button>
-            </li>
-          ))}
+                {g.trash.map((r) => (
+                  <p key={r.pageId} className="mt-1 text-muted">
+                    <span className="font-medium text-danger">Trash</span> {r.title}, {describe(r)}
+                  </p>
+                ))}
+                {fills.length > 0 && <p className="mt-2 text-xs text-muted">Fills in: {fills.join(", ")}</p>}
+                <button className="btn mt-3 h-8" disabled={disabled || busy !== null} onClick={() => merge(g)}>
+                  {busy === g.keep.pageId ? "Merging…" : "Merge"}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

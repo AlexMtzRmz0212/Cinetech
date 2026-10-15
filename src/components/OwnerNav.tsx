@@ -1,14 +1,17 @@
 "use client";
 
+import { LockSimple, SignOut } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { count } from "@/lib/format";
+import { NavLink } from "./NavLink";
 
 /** Fired (on window) by anything that adds, removes or merges movies, so the header count updates right away. */
 export const LIBRARY_CHANGED = "cinetech:library-changed";
 
-/** Owner-only links. Visitors see just a lock icon that leads to the sign-in page. */
-export function OwnerNav() {
+/** Header links plus the owner-only ones. Visitors see just a lock icon that leads to the sign-in page. */
+export function OwnerNav({ links }: { links: { href: string; label: string }[] }) {
   const [owner, setOwner] = useState<boolean | null>(null);
   const [total, setTotal] = useState<number | null>(null);
   const pathname = usePathname();
@@ -44,24 +47,38 @@ export function OwnerNav() {
     window.location.href = "/";
   }
 
-  if (owner === null) return null;
-  if (!owner) {
-    return (
-      <Link href="/login" className="ml-auto text-sm text-muted hover:text-text" title="Owner sign in" aria-label="Owner sign in">
-        🔒
-      </Link>
-    );
-  }
   return (
     <>
-      <Link href="/add" className="text-sm text-muted hover:text-text">Add</Link>
-      <Link href="/sync" className="text-sm text-muted hover:text-text">Sync</Link>
-      {total !== null && (
-        <span className="ml-auto rounded-full border border-border bg-panel px-2.5 py-0.5 text-xs text-muted" title="Movies in your library">
-          <span className="font-semibold text-accent">{total}</span> movies
-        </span>
-      )}
-      <button onClick={logout} className={`text-sm text-muted hover:text-text ${total === null ? "ml-auto" : ""}`}>Log out</button>
+      {/* Own row under the wordmark on phones, inline from sm up. */}
+      <div className="order-last flex w-full items-center gap-6 overflow-x-auto pb-3 sm:order-none sm:w-auto sm:overflow-visible sm:pb-0">
+        {links.map((l) => (
+          <NavLink key={l.href} href={l.href}>{l.label}</NavLink>
+        ))}
+        {owner && (
+          <>
+            <NavLink href="/add">Add</NavLink>
+            <NavLink href="/sync">Sync</NavLink>
+          </>
+        )}
+      </div>
+      <div className="ml-auto flex items-center gap-4">
+        {owner === false && (
+          <Link href="/login" className="-m-2 p-2 text-muted transition-colors hover:text-text" title="Owner sign in" aria-label="Owner sign in">
+            <LockSimple size={18} aria-hidden />
+          </Link>
+        )}
+        {owner && total !== null && (
+          <span className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted tabular-nums" title="Movies in your library">
+            <span className="font-semibold text-accent">{count(total)}</span> movies
+          </span>
+        )}
+        {owner && (
+          <button onClick={logout} className="-m-2 inline-flex cursor-pointer items-center gap-1.5 p-2 text-sm text-muted transition-colors hover:text-text" aria-label="Log out">
+            <SignOut size={18} aria-hidden />
+            <span className="hidden sm:inline">Log out</span>
+          </button>
+        )}
+      </div>
     </>
   );
 }

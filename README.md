@@ -3,7 +3,7 @@
 A personal movie library that uses **Notion as its database** and merges your trackers (Letterboxd, IMDb, Trakt, TMDb) into it without duplicates, enriched with TMDb and OMDb metadata.
 It replaces the old `NotionIMDb.py`, `NotionTMDb` and `LetterboxdNotion` scripts.
 
-- **Library**: poster grid with filters (genre, director, status, rating) and search. Signed in, click a movie to edit its status (any option of your Notion Status column), your rating and watched date, or move it to the Notion trash
+- **Library**: poster grid with filters (genre, director, status including your custom Notion statuses, rating) and search. Click a movie for its details; signed in, you can also edit its status (any option of your Notion Status column) and your rating, or move it to the Notion trash
 - **Add**: search TMDb, add to Notion as Watched or Watchlist with full metadata
 - **Sync**: fill missing metadata (or refresh all), import from Letterboxd (RSS or export ZIP), IMDb (CSV), Trakt and your TMDb account, with progress and a stop button; find and merge duplicate rows
 - **Stats**: watched per year, ratings, decades, genres, directors, actors

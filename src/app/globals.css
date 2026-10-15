@@ -1,35 +1,131 @@
 @import "tailwindcss";
 
+/* Screening room: a dark auditorium where the posters are the light. Dark only, on purpose. */
 :root {
-  --bg: #0e0f13;
-  --panel: #171920;
-  --border: #272a35;
-  --text: #e8e9ee;
-  --muted: #8b8fa0;
-  --accent: #f5b83d;
+  color-scheme: dark;
+  --bg: #111319; /* auditorium */
+  --panel: #1a1d25; /* seat row */
+  --well: #0c0d12; /* inset: log, inputs */
+  --border: #2b2f3a; /* aisle */
+  --text: #edebe6; /* screen */
+  --muted: #9a9daa; /* dim */
+  --accent: #f2b544; /* tungsten */
+  --ok: #6ccb8b;
+  --danger: #f0645c;
 }
 
 @theme inline {
   --color-bg: var(--bg);
   --color-panel: var(--panel);
+  --color-well: var(--well);
   --color-border: var(--border);
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-ok: var(--ok);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-big-shoulders), var(--font-schibsted), ui-sans-serif, sans-serif;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.btn {
-  @apply inline-flex items-center justify-center rounded-md border border-border bg-panel px-3 py-1.5 text-sm font-medium transition hover:border-accent disabled:opacity-50 disabled:hover:border-border;
+@layer base {
+  html {
+    scroll-padding-top: 5rem; /* clears the sticky header */
+    scrollbar-gutter: stable;
+    -webkit-tap-highlight-color: transparent;
+  }
+  a,
+  button,
+  label,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+  select option,
+  select optgroup {
+    background: var(--panel);
+    color: var(--text);
+  }
+  ::selection {
+    background: var(--accent);
+    color: var(--bg);
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 }
-.btn-primary {
-  @apply border-accent bg-accent text-black hover:brightness-110;
+
+@layer components {
+  .btn {
+    /* relative: keeps visually hidden inputs inside label-buttons (uploads, radios) so they can't stretch a scroll area. */
+    @apply relative inline-flex h-9 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-panel px-3.5 text-sm font-medium whitespace-nowrap text-text transition-colors hover:border-muted active:translate-y-px disabled:cursor-default disabled:opacity-50 disabled:hover:border-border disabled:active:translate-y-0;
+  }
+  .btn-primary {
+    @apply border-accent bg-accent text-bg hover:border-accent hover:brightness-110 disabled:hover:border-accent disabled:hover:brightness-100;
+  }
+  .btn-danger {
+    @apply border-danger/40 text-danger hover:border-danger;
+  }
+  .input {
+    @apply h-9 w-full rounded-md border border-border bg-well px-3 text-sm text-text outline-none transition-colors placeholder:text-muted focus:border-accent disabled:opacity-60;
+  }
+  .label {
+    @apply mb-1.5 block text-sm text-muted;
+  }
+  .page-title {
+    @apply mb-6 font-display text-5xl leading-[0.9] font-extrabold uppercase;
+  }
+
+  /* The film sheet: a native modal dialog. */
+  dialog.sheet {
+    max-width: none;
+    max-height: none;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border: 0;
+  }
+  dialog.sheet::backdrop {
+    background: rgb(8 9 12 / 0.78);
+  }
 }
-.input {
-  @apply w-full rounded-md border border-border bg-panel px-3 py-1.5 text-sm outline-none focus:border-accent;
+
+@media (prefers-reduced-motion: no-preference) {
+  dialog.sheet[open] > * {
+    animation: sheet-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  dialog.sheet[open]::backdrop {
+    animation: fade-in 220ms ease-out;
+  }
+  .progress-indeterminate {
+    animation: slide 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
 }

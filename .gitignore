@@ -8,6 +8,7 @@ next-env.d.ts
 !.env.example
 .vercel/
 *.zip
+.claude/
 
 # Legacy script folders (reference only, to be deleted)
 NotionIMDb.py

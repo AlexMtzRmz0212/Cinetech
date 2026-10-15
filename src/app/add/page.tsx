@@ -2,9 +2,9 @@ import { AddMovie } from "@/components/AddMovie";
 
 export default function AddPage() {
   return (
-    <>
-      <h1 className="mb-4 text-xl font-semibold">Add a movie</h1>
+    <div className="max-w-3xl">
+      <h1 className="page-title">Add a movie</h1>
       <AddMovie />
-    </>
+    </div>
   );
 }
