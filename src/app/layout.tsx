@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Big_Shoulders, Schibsted_Grotesk } from "next/font/google";
+import { Schibsted_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import Link from "next/link";
 import { preconnect } from "react-dom";
 import { OwnerNav } from "@/components/OwnerNav";
@@ -9,7 +10,8 @@ export const metadata: Metadata = { title: "Cinetech", description: "Your movie 
 export const viewport: Viewport = { themeColor: "#111319", colorScheme: "dark" };
 
 // Big Shoulders: condensed signage type for titles and figures. Schibsted Grotesk: everything else.
-const display = Big_Shoulders({ subsets: ["latin", "latin-ext"], axes: ["opsz"], variable: "--font-big-shoulders" });
+// Local file (variable wght, latin) because next/font/google has no fallback metrics for Big Shoulders and warns on every request.
+const display = localFont({ src: "./fonts/BigShoulders-latin.woff2", weight: "100 900", variable: "--font-big-shoulders" });
 const sans = Schibsted_Grotesk({ subsets: ["latin", "latin-ext"], variable: "--font-schibsted" });
 
 const links = [
